@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StyleProp, ViewStyle } from 'react-native';
-// import { BlurView } from 'expo-blur'; // Remove BlurView import
 
+import { Dispatch } from 'react';
 interface NumberPickerProps {
   onSelectNumber: (num: number) => void;
   onClose: () => void;
   style?: StyleProp<ViewStyle>;
-  onLayout?: (width: number, height: number) => void; 
+  onLayout?: (width: number, height: number) => void;
+  boardLayout: { x: number, y: number, width: number, height: number } | null;
+  selectedCell: { row: number; col: number } | null;
+  setPickerDimensions: Dispatch<{ width: number, height: number } | null>;
 }
 
 const CELL_SIZE = 35; 
 
-export default function NumberPicker({ onSelectNumber, onClose, style, onLayout }: NumberPickerProps) {
+export default function NumberPicker({ onSelectNumber, onClose, style, onLayout, boardLayout, selectedCell, setPickerDimensions }: NumberPickerProps) {
   const handleLayout = (event: any) => {
     if (onLayout) {
       onLayout(event.nativeEvent.layout.width, event.nativeEvent.layout.height);
@@ -19,7 +22,7 @@ export default function NumberPicker({ onSelectNumber, onClose, style, onLayout 
   };
 
   return (
-    <View style={[styles.container, style]} onLayout={handleLayout}> 
+    <View style={[styles.container, style]} onLayout={handleLayout}>
       <View style={styles.numberGrid}>
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(num => (
           <TouchableOpacity
@@ -29,7 +32,7 @@ export default function NumberPicker({ onSelectNumber, onClose, style, onLayout 
               onSelectNumber(num);
               onClose();
             }}>
-              <Text style={styles.numberButtonText}>{num}</Text>
+            <Text style={styles.numberButtonText}>{num}</Text>
           </TouchableOpacity>
         ))}
       </View>

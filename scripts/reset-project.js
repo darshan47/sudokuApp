@@ -93,6 +93,8 @@ const moveDirectories = async (userInput) => {
           : ""
       }`
     );
+    console.log("4. Run `npm install` to ensure all dependencies are installed.");
+    console.log("5. Run `expo start -c` to clear the Expo cache.");
   } catch (error) {
     console.error(`❌ Error during script execution: ${error.message}`);
   }
