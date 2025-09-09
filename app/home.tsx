@@ -30,13 +30,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     marginBottom: 6,
-    color: '#2e2e2e',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.7)',
+    textShadowOffset: { width: 3, height: 3 },
+    textShadowRadius: 8,
+    elevation: 6,
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
   },
   subtitle: {
     fontSize: 18,
     textAlign: 'center',
-    color: '#4a4a4a',
+    color: '#F0F0F0',
     marginBottom: 24,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
   },
   gameModeContainer: {
     width: '100%',
@@ -46,18 +57,25 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 96,
     marginBottom: 16,
-    elevation: 8,
+    elevation: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.16,
-    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.6,
+    shadowRadius: 40,
+    borderRadius: 24,
+    overflow: 'hidden',
   },
 });
 
 // SVG Button Components
 const SoloButtonSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="96" viewBox="0 0 360 96">
-  <defs><clipPath id="round"><rect x="0" y="0" width="360" height="96" rx="24" ry="24"/></clipPath></defs>
-  <g clip-path="url(#round)"><rect x="0" y="0" width="360" height="96" fill="#2E7D32"/></g>
+  <defs>
+    <clipPath id="round"><rect x="0" y="0" width="360" height="96" rx="24" ry="24"/></clipPath>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="rgba(0,0,0,0.4)"/>
+    </filter>
+  </defs>
+  <g clip-path="url(#round)"><rect x="0" y="0" width="360" height="96" fill="#2E7D32" filter="url(#shadow)"/></g>
   <g transform="translate(24,32)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28">
   <circle cx="12" cy="8" r="4" fill="#FFFFFF"/>
   <path d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="#FFFFFF"/>
@@ -76,8 +94,13 @@ const SoloButtonSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" heigh
 </svg>`;
 
 const PassPhoneButtonSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="96" viewBox="0 0 360 96">
-  <defs><clipPath id="round"><rect x="0" y="0" width="360" height="96" rx="24" ry="24"/></clipPath></defs>
-  <g clip-path="url(#round)"><rect x="0" y="0" width="360" height="96" fill="#D84315"/></g>
+  <defs>
+    <clipPath id="round2"><rect x="0" y="0" width="360" height="96" rx="24" ry="24"/></clipPath>
+    <filter id="shadow2" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="rgba(0,0,0,0.4)"/>
+    </filter>
+  </defs>
+  <g clip-path="url(#round2)"><rect x="0" y="0" width="360" height="96" fill="#D84315" filter="url(#shadow2)"/></g>
   <g transform="translate(24,32)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28">
   <rect x="6" y="2" width="12" height="20" rx="2" ry="2" fill="none" stroke="#FFFFFF" stroke-width="2"/>
   <circle cx="12" cy="18.5" r="1" fill="#FFFFFF"/>
@@ -96,8 +119,13 @@ const PassPhoneButtonSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" 
 </svg>`;
 
 const VersusButtonSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="96" viewBox="0 0 360 96">
-  <defs><clipPath id="round"><rect x="0" y="0" width="360" height="96" rx="24" ry="24"/></clipPath></defs>
-  <g clip-path="url(#round)"><rect x="0" y="0" width="360" height="96" fill="#6A1B9A"/></g>
+  <defs>
+    <clipPath id="round3"><rect x="0" y="0" width="360" height="96" rx="24" ry="24"/></clipPath>
+    <filter id="shadow3" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="rgba(0,0,0,0.4)"/>
+    </filter>
+  </defs>
+  <g clip-path="url(#round3)"><rect x="0" y="0" width="360" height="96" fill="#6A1B9A" filter="url(#shadow3)"/></g>
   <g transform="translate(24,32)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28">
   <g fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M14 7l7-4-4 7L7 20l-3-3L14 7z"/>
@@ -123,10 +151,10 @@ export default function HomePage() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#F4E6CC', '#EAD8B1']}
+        colors={['#667eea', '#764ba2', '#f093fb']}
         style={styles.backgroundGradient}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 1, y: 1 }}
       />
       
       <Text style={styles.title}>सुडोकू !</Text>

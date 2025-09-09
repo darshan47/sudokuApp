@@ -4,7 +4,6 @@ import { generateSudoku, isValid, solveSudoku, checkBoard, GRID_SIZE, BOX_SIZE }
 import NumberPicker from '../components/NumberPicker';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 // Dynamic cell sizing based on screen dimensions - ensure everything fits
@@ -31,9 +30,10 @@ const MAJOR_BORDER_WIDTH = 2;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: height * 0.01, // 1% of screen height
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: width * 0.02, // 2% of screen width
-    paddingBottom: height * 0.01, // 1% of screen height
   },
   playerSection: {
     justifyContent: 'center',
@@ -197,8 +197,9 @@ const styles = StyleSheet.create({
   boardsContainer: {
     flexDirection: 'column',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingBottom: 20,
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 400,
   },
   versusIndicator: {
     fontSize: Math.floor(width * 0.04), // 4% of screen width
@@ -375,7 +376,8 @@ export default function VersusMode() {
             useNativeDriver: true,
           }).start(() => {
             setTimeout(() => {
-              setSelectedCell(null);
+              setSelectedCell1(null);
+              setSelectedCell2(null);
               setPickerPosition(null);
             }, 0);
           });
@@ -389,8 +391,8 @@ export default function VersusMode() {
           });
 
           // Check if puzzle is solved (both players win together)
-          if (checkBoard(newBoard1)) {
-            setTimeout(() => setWinner('Both'), 0);
+          if (newBoard1 && checkBoard(newBoard1)) {
+            setTimeout(() => setWinner(3), 0); // Use 3 to represent "Both"
           } else {
             // Both players can continue playing simultaneously
           }
@@ -436,52 +438,41 @@ export default function VersusMode() {
   };
 
   const handleSolve = () => {
-    if (currentPlayer === 1 && player1Board) {
+    if (player1Board) {
       const boardToSolve = player1Board.map(row => [...row]);
       if (solveSudoku(boardToSolve)) {
         setPlayer1Board(boardToSolve);
-        Alert.alert('Player 1 Puzzle Solved!', 'The puzzle has been successfully solved.', [{ text: 'OK', style: 'cancel' }]);
-      } else {
-        Alert.alert('No Solution', 'This Sudoku board currently has no valid solution.', [{ text: 'OK', style: 'cancel' }]);
-      }
-    } else if (currentPlayer === 2 && player2Board) {
-      const boardToSolve = player2Board.map(row => [...row]);
-      if (solveSudoku(boardToSolve)) {
         setPlayer2Board(boardToSolve);
-        Alert.alert('Player 2 Puzzle Solved!', 'The puzzle has been successfully solved.', [{ text: 'OK', style: 'cancel' }]);
+        Alert.alert('Puzzle Solved!', 'The puzzle has been successfully solved.', [{ text: 'OK', style: 'cancel' }]);
       } else {
         Alert.alert('No Solution', 'This Sudoku board currently has no valid solution.', [{ text: 'OK', style: 'cancel' }]);
       }
     }
-    setSelectedCell(null);
+    setSelectedCell1(null);
+    setSelectedCell2(null);
     setPickerPosition(null);
   };
 
   const handleCheck = () => {
-    if (currentPlayer === 1 && player1Board) {
+    if (player1Board) {
       if (checkBoard(player1Board.map(row => [...row]))) {
-        Alert.alert('Player 1 Board is Correct!', 'Congratulations, your Sudoku board is correct!', [{ text: 'OK', style: 'cancel' }]);
+        Alert.alert('Board is Correct!', 'Congratulations, your Sudoku board is correct!', [{ text: 'OK', style: 'cancel' }]);
       } else {
-        Alert.alert('Player 1 Board is Incorrect', 'Some numbers are placed incorrectly or the board is not complete.', [{ text: 'OK', style: 'cancel' }]);
-      }
-    } else if (currentPlayer === 2 && player2Board) {
-      if (checkBoard(player2Board.map(row => [...row]))) {
-        Alert.alert('Player 2 Board is Correct!', 'Congratulations, your Sudoku board is correct!', [{ text: 'OK', style: 'cancel' }]);
-      } else {
-        Alert.alert('Player 2 Board is Incorrect', 'Some numbers are placed incorrectly or the board is not complete.', [{ text: 'OK', style: 'cancel' }]);
+        Alert.alert('Board is Incorrect', 'Some numbers are placed incorrectly or the board is not complete.', [{ text: 'OK', style: 'cancel' }]);
       }
     }
-    setSelectedCell(null);
+    setSelectedCell1(null);
+    setSelectedCell2(null);
     setPickerPosition(null);
   };
 
   const handleClear = () => {
-    if (currentPlayer === 1 && player1Initial) {
+    if (player1Initial) {
       setPlayer1Board(player1Initial.map(row => [...row]));
-    } else if (currentPlayer === 2 && player2Initial) {
-      setPlayer2Board(player2Initial.map(row => [...row]));
+      setPlayer2Board(player1Initial.map(row => [...row]));
     }
-    setSelectedCell(null);
+    setSelectedCell1(null);
+    setSelectedCell2(null);
     setPickerPosition(null);
   };
 
@@ -553,14 +544,8 @@ export default function VersusMode() {
   };
 
   return (
-    <LinearGradient
-      colors={['#667eea', '#764ba2', '#f093fb']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      <View style={{ flex: 1 }}>
-        <View style={styles.boardsContainer}>
+    <View style={styles.container}>
+      <View style={styles.boardsContainer}>
           {/* Player 1 Board (inverted for opposite viewing) */}
           <View style={styles.playerSection}>
             <View style={styles.playerHeader}>
@@ -625,7 +610,6 @@ export default function VersusMode() {
               />
             </View>
           )}
-        </View>
       </View>
 
       {showInvalidMoveHint && (
@@ -636,13 +620,13 @@ export default function VersusMode() {
 
       {winner && (
         <View style={styles.winnerOverlay}>
-          <Text style={styles.winnerText}>🎉 {winner === 'Both' ? 'Puzzle Solved!' : `Player ${winner} Wins!`} 🎉</Text>
+          <Text style={styles.winnerText}>🎉 {winner === 3 ? 'Puzzle Solved!' : `Player ${winner} Wins!`} 🎉</Text>
           <TouchableOpacity onPress={startNewGame} style={styles.winnerButton}>
             <Text style={styles.winnerButtonText}>Play Again</Text>
           </TouchableOpacity>
         </View>
       )}
 
-    </LinearGradient>
+    </View>
   );
 }
