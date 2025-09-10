@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { SvgXml } from 'react-native-svg';
@@ -39,6 +39,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
+  },
+  cursor: {
+    color: '#FFFFFF',
+    fontSize: 40,
+    fontWeight: '700',
+    opacity: 0.8,
   },
   subtitle: {
     fontSize: 18,
@@ -147,6 +153,69 @@ const VersusButtonSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" hei
 </svg></g>
 </svg>`;
 
+const AnimatedTitle = () => {
+  const [displayText, setDisplayText] = React.useState('');
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [isDevanagari, setIsDevanagari] = React.useState(true);
+  const [isTyping, setIsTyping] = React.useState(true);
+
+  const devanagariText = 'सुडोकू !';
+  const englishText = 'Sudoku!';
+
+  useEffect(() => {
+    if (!isTyping) return;
+
+    const currentFullText = isDevanagari ? devanagariText : englishText;
+    
+    if (currentIndex < currentFullText.length) {
+      const timer = setTimeout(() => {
+        setDisplayText(currentFullText.substring(0, currentIndex + 1));
+        setCurrentIndex(currentIndex + 1);
+      }, 150); // Type each character every 150ms
+
+      return () => clearTimeout(timer);
+    } else {
+      // Finished typing, wait a bit then start erasing
+      const pauseTimer = setTimeout(() => {
+        setIsTyping(false);
+        setCurrentIndex(currentFullText.length - 1);
+      }, 2000); // Pause for 2 seconds
+
+      return () => clearTimeout(pauseTimer);
+    }
+  }, [currentIndex, isDevanagari, isTyping]);
+
+  useEffect(() => {
+    if (isTyping) return;
+
+    if (currentIndex > 0) {
+      const timer = setTimeout(() => {
+        setDisplayText((isDevanagari ? devanagariText : englishText).substring(0, currentIndex));
+        setCurrentIndex(currentIndex - 1);
+      }, 100); // Erase each character every 100ms
+
+      return () => clearTimeout(timer);
+    } else {
+      // Finished erasing, switch language and start typing again
+      const switchTimer = setTimeout(() => {
+        setIsDevanagari(!isDevanagari);
+        setIsTyping(true);
+        setCurrentIndex(0);
+        setDisplayText('');
+      }, 500); // Brief pause before switching
+
+      return () => clearTimeout(switchTimer);
+    }
+  }, [currentIndex, isDevanagari, isTyping]);
+
+  return (
+    <Text style={styles.title}>
+      {displayText}
+      <Text style={styles.cursor}>|</Text>
+    </Text>
+  );
+};
+
 export default function HomePage() {
   const router = useRouter();
 
@@ -160,7 +229,7 @@ export default function HomePage() {
         locations={[0, 0.25, 0.5, 0.75, 1]}
       />
       
-      <Text style={styles.title}>सुडोकू !</Text>
+      <AnimatedTitle />
       <Text style={styles.subtitle}>Choose your game mode</Text>
       
       <View style={styles.gameModeContainer}>
