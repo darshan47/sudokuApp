@@ -11,9 +11,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 32,
-    paddingBottom: 40,
+    paddingHorizontal: 40,
+    paddingTop: 60,
+    paddingBottom: 80,
   },
   backgroundGradient: {
     position: 'absolute',
@@ -52,11 +52,13 @@ const styles = StyleSheet.create({
   gameModeContainer: {
     width: '100%',
     maxWidth: 720,
+    marginTop: 20,
+    marginBottom: 20,
   },
   gameModeButton: {
     width: '100%',
     height: 96,
-    marginBottom: 16,
+    marginBottom: 24,
     elevation: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 20 },
@@ -125,7 +127,7 @@ const VersusButtonSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" hei
       <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="rgba(0,0,0,0.4)"/>
     </filter>
   </defs>
-  <g clip-path="url(#round3)"><rect x="0" y="0" width="360" height="96" fill="#6A1B9A" filter="url(#shadow3)"/></g>
+  <g clip-path="url(#round3)"><rect x="0" y="0" width="360" height="96" fill="#00BCD4" filter="url(#shadow3)"/></g>
   <g transform="translate(24,32)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28">
   <g fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M14 7l7-4-4 7L7 20l-3-3L14 7z"/>
@@ -151,10 +153,11 @@ export default function HomePage() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#667eea', '#764ba2', '#f093fb']}
+        colors={['#000000','#667eea', '#4A148C', '#7B1FA2', '#9C27B0']}
         style={styles.backgroundGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
+        locations={[0, 0.25, 0.5, 0.75, 1]}
       />
       
       <Text style={styles.title}>सुडोकू !</Text>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, Animated, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, Animated, Pressable, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { generateSudoku, isValid, solveSudoku, checkBoard, GRID_SIZE, BOX_SIZE } from '@/utils/sudoku';
 import NumberPicker from '../components/NumberPicker';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
@@ -31,9 +31,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: width * 0.02, // 2% of screen width
+    minHeight: height,
   },
   playerSection: {
     justifyContent: 'center',
@@ -137,11 +141,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 6,
   },
-  pickerTop: {
-    // Picker appears at top for Player 1
+  pickerAbovePlayer1: {
+    // Picker appears above Player 1's board
+    marginBottom: height * 0.01,
   },
   pickerBottom: {
     // Picker appears at bottom for Player 2
+    marginTop: height * 0.01,
   },
   winnerOverlay: {
     position: 'absolute',
@@ -297,48 +303,15 @@ export default function VersusMode() {
     const currentSelectedCell = player === 1 ? selectedCell1 : selectedCell2;
     const setCurrentSelectedCell = player === 1 ? setSelectedCell1 : setSelectedCell2;
 
-    // If clicking the same cell, close the picker
+    // If clicking the same cell, deselect it
     if (currentSelectedCell?.row === row && currentSelectedCell?.col === col) {
-      if (pickerPosition) {
-        Animated.timing(slideAnim, {
-          toValue: 300,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => {
-          setTimeout(() => {
-            setPickerPosition(null);
-            setCurrentSelectedCell(null);
-          }, 0);
-        });
-      } else {
-        setPickerPosition(null);
-        setCurrentSelectedCell(null);
-      }
+      setCurrentSelectedCell(null);
       return;
     }
 
     // If clicking a different cell, switch to that cell
     setCurrentSelectedCell({ row, col });
     setShowInvalidMoveHint(false);
-
-    // Don't close picker when switching cells - keep it open
-
-
-    // Show picker for empty cells
-    const currentBoard = player === 1 ? player1Board : player2Board;
-    const currentInitial = player === 1 ? player1Initial : player2Initial;
-    
-    if (currentBoard && currentInitial && currentInitial[row][col] === 0) {
-      setPickerPosition({ x: 0, y: 0 });
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-      
-    } else {
-      setPickerPosition(null);
-    }
   };
 
   const handleNumberSelect = (num: number, player: number) => {
@@ -347,9 +320,9 @@ export default function VersusMode() {
     
     const { row, col } = currentSelectedCell;
     
-    // Since both players have the same puzzle, use player1Board as reference
-    const currentBoard = player1Board;
-    const currentInitial = player1Initial;
+    // Each player has their own board and initial state
+    const currentBoard = player === 1 ? player1Board : player2Board;
+    const currentInitial = player === 1 ? player1Initial : player2Initial;
 
     if (currentBoard && currentInitial) {
       const tempBoard = currentBoard.map(r => [...r]);
@@ -357,16 +330,16 @@ export default function VersusMode() {
 
       if (currentInitial[row][col] === 0) {
         if (num === 0 || isValid(tempBoard, row, col, num)) {
-          // Update both boards simultaneously
-          const newBoard1 = player1Board ? player1Board.map(r => [...r]) : null;
-          const newBoard2 = player2Board ? player2Board.map(r => [...r]) : null;
-          
-          if (newBoard1) newBoard1[row][col] = num;
-          if (newBoard2) newBoard2[row][col] = num;
-
-          // Batch state updates to prevent useInsertionEffect warning
-          setPlayer1Board(newBoard1);
-          setPlayer2Board(newBoard2);
+          // Update only the current player's board
+          if (player === 1) {
+            const newBoard1 = player1Board ? player1Board.map(r => [...r]) : null;
+            if (newBoard1) newBoard1[row][col] = num;
+            setPlayer1Board(newBoard1);
+          } else {
+            const newBoard2 = player2Board ? player2Board.map(r => [...r]) : null;
+            if (newBoard2) newBoard2[row][col] = num;
+            setPlayer2Board(newBoard2);
+          }
           setShowInvalidMoveHint(false);
 
           // Use setTimeout to defer state updates in animation callbacks
@@ -390,11 +363,16 @@ export default function VersusMode() {
             setTimeout(() => setShowInvalidMoveHint(false), 0);
           });
 
-          // Check if puzzle is solved (both players win together)
-          if (newBoard1 && checkBoard(newBoard1)) {
-            setTimeout(() => setWinner(3), 0); // Use 3 to represent "Both"
-          } else {
-            // Both players can continue playing simultaneously
+          // Check if current player's puzzle is solved
+          const currentNewBoard = player === 1 ? 
+            (player1Board ? player1Board.map(r => [...r]) : null) : 
+            (player2Board ? player2Board.map(r => [...r]) : null);
+          
+          if (currentNewBoard) {
+            currentNewBoard[row][col] = num;
+            if (checkBoard(currentNewBoard)) {
+              setTimeout(() => setWinner(player), 0);
+            }
           }
         } else {
           setShowInvalidMoveHint(true);
@@ -544,25 +522,21 @@ export default function VersusMode() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.boardsContainer}>
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.boardsContainer}>
           {/* Player 1 Board (inverted for opposite viewing) */}
           <View style={styles.playerSection}>
-            <View style={styles.playerHeader}>
-              <Text style={styles.playerTitle}>Player 1</Text>
-            </View>
-            {isLoading ? (
-              <Text>Loading...</Text>
-            ) : (
-              <View style={styles.invertedBoard}>
-                {renderBoard(player1Board as unknown as number[], 1)}
-              </View>
-            )}
-          </View>
-
-          {/* Number picker for Player 1 (inverted, right after Player 1 board) */}
-          {selectedCell1 && (
-            <View style={[styles.numberPickerContainer, styles.pickerTop]}>
+            {/* Number picker for Player 1 (above their board) - always visible */}
+            <View style={[styles.numberPickerContainer, styles.pickerAbovePlayer1]}>
               <View style={styles.invertedBoard}>
                 <NumberPicker
                   onSelectNumber={(num) => handleNumberSelect(num, 1)}
@@ -573,7 +547,18 @@ export default function VersusMode() {
                 />
               </View>
             </View>
-          )}
+            
+            <View style={[styles.playerHeader, styles.invertedBoard]}>
+              <Text style={styles.playerTitle}>Player 1</Text>
+            </View>
+            {isLoading ? (
+              <Text>Loading...</Text>
+            ) : (
+              <View style={styles.invertedBoard}>
+                {renderBoard(player1Board as unknown as number[], 1)}
+              </View>
+            )}
+          </View>
 
           {/* Visual Separator between Player 1 and Player 2 */}
           <View style={styles.boardSeparator}>
@@ -596,10 +581,8 @@ export default function VersusMode() {
             ) : (
               renderBoard(player2Board as unknown as number[], 2)
             )}
-          </View>
-
-          {/* Number picker for Player 2 (normal, right after Player 2 board) */}
-          {selectedCell2 && (
+            
+            {/* Number picker for Player 2 (below their board) - always visible */}
             <View style={[styles.numberPickerContainer, styles.pickerBottom]}>
               <NumberPicker
                 onSelectNumber={(num) => handleNumberSelect(num, 2)}
@@ -609,8 +592,9 @@ export default function VersusMode() {
                 setPickerDimensions={setPickerDimensions}
               />
             </View>
-          )}
-      </View>
+          </View>
+        </View>
+      </ScrollView>
 
       {showInvalidMoveHint && (
         <Animated.View style={[styles.invalidMoveHintContainer, { opacity: invalidMoveFadeAnim }]}>
@@ -620,13 +604,13 @@ export default function VersusMode() {
 
       {winner && (
         <View style={styles.winnerOverlay}>
-          <Text style={styles.winnerText}>🎉 {winner === 3 ? 'Puzzle Solved!' : `Player ${winner} Wins!`} 🎉</Text>
+          <Text style={styles.winnerText}>🎉 Player {winner} Wins! 🎉</Text>
           <TouchableOpacity onPress={startNewGame} style={styles.winnerButton}>
             <Text style={styles.winnerButtonText}>Play Again</Text>
           </TouchableOpacity>
         </View>
       )}
 
-    </View>
+    </KeyboardAvoidingView>
   );
 }
